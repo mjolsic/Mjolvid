@@ -205,3 +205,12 @@ img.article-image {
 .play-button:hover{
   color: #e91e63;
 }
+
+.pages{
+  margin:auto;
+  width:auto;
+}
+
+.pages-button{
+  margin:10px 5px 20px 5px;
+}
