@@ -84,7 +84,7 @@ function readExcel(input,pathName,selOpt,selVal){
 function displayDivs(type,pathName,information,selOpt,selVal){
   if (type === 'INFORMATION'){
     pageButtonRMB();
-    loadDiv(information,'0');
+    loadDiv(information,1);
     pageDisable();
   }
   else if (type === 'FILTER'){
@@ -95,6 +95,8 @@ function displayDivs(type,pathName,information,selOpt,selVal){
   }
   else if (type === 'PAGE-BUTTON'){
     dispContBut(information,selOpt);
+    regenBut(information,selOpt);
+    pageDisable(information);
   }
 }
 
@@ -138,21 +140,20 @@ function pageButtonRMB(action,navigate_Index){
     let cur_Index = '';
     if (action === 'Add'){
       let prev_Index = parseInt(getInfo(KEY));
-      cur_Index = prev_Index + 8;
+      cur_Index = prev_Index + 1;
     }
     else if (action === 'Subtract'){
       let prev_Index = parseInt(getInfo(KEY));
-      cur_Index = prev_Index - 8;
+      cur_Index = prev_Index - 1;
     }
     else if (action === 'Navigate') {
       let selected_Page = parseInt(navigate_Index);
-      let selected_Index = (selected_Page - 1) * 8;
-      cur_Index = selected_Index;
+      cur_Index = selected_Page;
     }
     setInfo(KEY,cur_Index);
   }
   else{
-    setInfo(KEY,0);
+    setInfo(KEY,1);
   }
 }
 
@@ -194,12 +195,14 @@ function loadDiv(data,index){
   let contentDivs = getElement('id',type2);
   let contentOutput = '';
   for (let i=index;i<index+8;i++){
-    contentOutput += generateContents(type2,data[i]);
+    if (data[i] !== undefined){
+      contentOutput += generateContents(type2,data[i]);
+    }
   }
   contentDivs.innerHTML = contentOutput;
   // record the number of page number
   let number = data.length;
-  calButNum(type2,number);
+  calButNum(type2,number,index);
 }
 
 function generateContents(type,data){
@@ -332,7 +335,6 @@ function buttonClicked(event){
     // selected button
     let selBut = event.target.id;
     checkPageBut(selBut);
-    pageDisable();
   }
   //console.log(event.target)
 }
@@ -436,32 +438,53 @@ function sortFuntionality(type,data,information){
 }
 
 // calculate button number
-function calButNum(type,number_of_pg){
+function calButNum(type,number_of_pg,start_index){
   let output = '';
   let pages = getElement('id','pages');
   if (type === 'filter'){
 
   }
   else if (type === 'contents'){
-    let still_have = number_of_pg - 8;
-    let count = 2;
+    let still_have = number_of_pg / 8;
     output += createButDiv('Previous');
-    output += createButDiv('1');
-    if (still_have <= 8){
-      output += createButDiv(count);
-    }
-    else if (still_have > 8){
-      let inner_count = count * 8;
-      while (inner_count < still_have){
-        output += createButDiv(count);
-        count += 1;
-        inner_count = count * 8;
+    // check if dramas need more than 4 page to handle
+    if (still_have > 4){
+      let count = Math.ceil(still_have);
+      // check if there is pages index to hide
+      if (start_index > 1){
+        output += createButDiv('...');
+        // check if the final index display will be larger than needed index
+        // for dramas
+        if (start_index+4 > count){
+          // display 4 index of pages up to the last one needed
+          for (let i=count-3;i<count+1;i++){
+            output += createButDiv(i);
+          }
+        }
+        else{
+          let final_index_plus_1 = start_index+4;
+          // display 4 pages for the dramas
+          for(let i=start_index;i<final_index_plus_1;i++){
+            output += createButDiv(i);
+          }
+          output += createButDiv('...');
+        }
       }
-      if (still_have > 24){
+      else if (start_index === 1){
+        for (let i=1;i<5;i++){
+          output += createButDiv(i);
+        }
         output += createButDiv('...');
       }
     }
-    output += createButDiv('Next')
+    else{
+      let count = Math.ceil(still_have);
+      console.log(still_have)
+      for (let i=start_index;i<=count;i++){
+        output += createButDiv(i);
+      }
+    }
+    output += createButDiv('Next');
   }
   pages.innerHTML = output;
 }
@@ -471,26 +494,34 @@ function createButDiv(count){
   return output;
 }
 
-function pageDisable(){
+function pageDisable(information){
   let KEY = 'PAGE-BUTTON';
   let start_index = getInfo(KEY);
-  let converted_Index = parseInt(start_index/8);
+  let converted_Index = parseInt(start_index);
   let name = 'pages-button';
   let theClass = getElement('cn',name);
+  let still_have,index,condition_1;
+  if (information){
+    still_have = information.length/8;
+    index = Math.ceil(still_have);
+  }
   for (let i=0;i<theClass.length;i++){
     if (theClass[i].disabled){
       theClass[i].disabled = false;
     }
-    if (theClass[i].id === '...'){
+    let condition = parseInt(theClass[i].id);
+    if (theClass[i].id === '...' || condition === converted_Index){
       theClass[i].disabled = true;
+      if (index === condition){
+        condition_1 = true;
+      }
     }
   }
-  if (converted_Index < 1){
+  if (converted_Index < 2){
     theClass[0].disabled = true;
-    theClass[1].disabled = true;
   }
-  else{
-    theClass[converted_Index+1].disabled = true;
+  else if (condition_1 === true){
+    theClass[theClass.length-1].disabled = true;
   }
 }
 
@@ -515,10 +546,21 @@ function dispContBut(information,start_index){
   let output = '';
   let type = 'contents';
   let contentDivs = getElement('id',type);
-  for (let i = start_index;i<start_index+8;i++){
+  let count = (start_index - 1) * 8;
+  for (let i = count;i<count+8;i++){
     if (information[i]!== undefined){
       output += generateContents(type,information[i]);
     }
   }
   contentDivs.innerHTML = output;
+}
+
+function regenBut(information,input_Index){
+  let selected_Id = parseInt(input_Index);
+  let to_Hide = 1;
+  let still_have = information.length;
+  if (selected_Id > 2){
+    to_Hide = selected_Id - 2;
+  }
+  calButNum('contents',still_have,to_Hide);
 }
