@@ -94,7 +94,7 @@ function displayDivs(type,pathName,information,selOpt,selVal){
     infoPage(pathName,information);
   }
   else if (type === 'PAGE-BUTTON'){
-    dispContBut(information,selOpt);
+    //dispContBut(information,selOpt);
     regenBut(information,selOpt);
     pageDisable(information);
   }
@@ -194,7 +194,7 @@ function loadDiv(data,index){
   let type2 = 'contents';
   let contentDivs = getElement('id',type2);
   let contentOutput = '';
-  for (let i=index;i<index+8;i++){
+  for (let i=index-1;i<index+7;i++){
     if (data[i] !== undefined){
       contentOutput += generateContents(type2,data[i]);
     }
@@ -320,7 +320,6 @@ function buttonClicked(event){
     let pathName = htmlChecker();
     // key to trigger if statement
     let input = 'FILTER';
-    console.log(pathName)
     readExcel(input,pathName,selOpt,selVal)
   }
   else if (event.target.matches('.mdl-button__ripple-container') || event.target.matches('.play-button')){
@@ -395,7 +394,6 @@ function sortFilter(type,value,information){
       name.push(information[i].Name)
     }
   }
-  console.log([tempArray,information])
   return [tempArray,information];
 }
 
@@ -424,6 +422,13 @@ function sortDisplay(input,data){
   let type = 'contents';
   let contentDivs = getElement('id',type);
   let output = '';
+  // for page button recreate
+  let still_have = Math.ceil(count / 8);
+  regenBut(input,still_have);
+  pageDisable(input);
+  if (count > 8){
+    count = 8;
+  }
   for (let i=0;i<count;i++){
     let curSel = input[i];
     output += generateContents(type,data[curSel]);
@@ -479,7 +484,6 @@ function calButNum(type,number_of_pg,start_index){
     }
     else{
       let count = Math.ceil(still_have);
-      console.log(still_have)
       for (let i=start_index;i<=count;i++){
         output += createButDiv(i);
       }
@@ -520,7 +524,7 @@ function pageDisable(information){
   if (converted_Index < 2){
     theClass[0].disabled = true;
   }
-  else if (condition_1 === true){
+  if (condition_1 === true){
     theClass[theClass.length-1].disabled = true;
   }
 }
