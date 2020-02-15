@@ -94,7 +94,8 @@ function displayDivs(type,pathName,information,selOpt,selVal){
     infoPage(pathName,information);
   }
   else if (type === 'PAGE-BUTTON'){
-    //dispContBut(information,selOpt);
+    let indexArray = sortFilter(information);
+    dispContBut(selOpt,indexArray,information);
     regenBut(information,selOpt);
     pageDisable(information);
   }
@@ -362,13 +363,12 @@ function sortRMB(type,value,information){
   setInfo(KEY,outputObj);
 }
 
-function sortFilter(type,value,information){
+function sortFilter(information){
   //
   let KEY = 'FILTER';
   let data = getInfo(KEY);
 
   let tempArray = [];
-  let name = [];
   let total_count = Object.keys(data).length;
   let indi_count = 0;
 
@@ -391,10 +391,9 @@ function sortFilter(type,value,information){
     }
     if (indi_count === total_count){
       tempArray.push(i);
-      name.push(information[i].Name)
     }
   }
-  return [tempArray,information];
+  return tempArray;
 }
 
 function sortButton(stage,data1,data2){
@@ -424,8 +423,17 @@ function sortDisplay(input,data){
   let output = '';
   // for page button recreate
   let still_have = Math.ceil(count / 8);
-  regenBut(input,still_have);
-  pageDisable(input);
+  // reset the page button to the first one
+  if (count > 0){
+    pageButtonRMB('Navigate',1);
+    regenBut(input,still_have);
+    pageDisable(input);
+  }
+  else{
+    regenBut([0],1);
+    pageDisable([0]);
+  }
+
   if (count > 8){
     count = 8;
   }
@@ -438,8 +446,8 @@ function sortDisplay(input,data){
 
 function sortFuntionality(type,data,information){
   sortRMB(type,data);
-  let indexArray = sortFilter(type,data,information);
-  sortDisplay(indexArray[0],indexArray[1]);
+  let indexArray = sortFilter(information);
+  sortDisplay(indexArray,information);
 }
 
 // calculate button number
@@ -542,18 +550,19 @@ function checkPageBut(id){
     pageButtonRMB('Navigate',id)
   }
   let currentPage = getInfo(KEY);
-  readExcel(KEY,pathName,currentPage)
+  readExcel(KEY,pathName,currentPage);
 }
 
 //display button for selected content
-function dispContBut(information,start_index){
+function dispContBut(page_button,index_Of_Contents,information){
   let output = '';
   let type = 'contents';
   let contentDivs = getElement('id',type);
-  let count = (start_index - 1) * 8;
-  for (let i = count;i<count+8;i++){
-    if (information[i]!== undefined){
-      output += generateContents(type,information[i]);
+  let start_Count = (page_button - 1) * 8;
+  for (let i = start_Count;i<start_Count+8;i++){
+    let contents_Index = index_Of_Contents[i];
+    if (information[contents_Index]!== undefined){
+      output += generateContents(type,information[contents_Index]);
     }
   }
   contentDivs.innerHTML = output;
