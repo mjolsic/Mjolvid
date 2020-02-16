@@ -6,7 +6,7 @@ function initialise(){
   stringProto();
   let pathName = htmlChecker();
   if (pathName.indexOf('index') !== -1){
-
+    readExcel('MAIN',pathName)
   }
   else if (pathName.indexOf('information_page') !== -1){
     let KEY = 'INDEX';
@@ -40,7 +40,7 @@ function stringProto(){
 // third and fourth is used when filter button is clicked
 // selOpt = selected options/type, selVal = selected value
 function readExcel(input,pathName,selOpt,selVal){
-  var url = "information.xlsx";
+  var url = "information_ENG.xlsx";
   var oReq = new XMLHttpRequest();
   oReq.open("GET", url, true);
 
@@ -59,11 +59,22 @@ function readExcel(input,pathName,selOpt,selVal){
     // DO SOMETHING WITH workbook HERE
 
     // Get worksheet
-    var worksheet = '';
+    var worksheet,information,sheets_name;
+    if (input === 'MAIN'){
+      worksheet = [];
+      sheets_name = [];
+      information = [];
+    }
     workbook.SheetNames.forEach((item) => {
       if (input !== 'INFO-PAGE'){
-        if (pathName.indexOf(item) !== -1){
-          worksheet = workbook.Sheets[item]
+        if (input !== 'MAIN'){
+          if (pathName.indexOf(item) !== -1){
+            worksheet = workbook.Sheets[item];
+          }
+        }
+        else{
+          sheets_name.push(item);
+          worksheet.push(workbook.Sheets[item]);
         }
       }
       else{
@@ -72,7 +83,18 @@ function readExcel(input,pathName,selOpt,selVal){
         }
       }
     });
-    var information = XLSX.utils.sheet_to_json(worksheet,{raw:true});
+
+    if (worksheet.length){
+      let tempArray = [];
+      for (let i=0;i<worksheet.length;i++){
+        tempArray.push(XLSX.utils.sheet_to_json(worksheet[i],{raw:true}))
+      }
+      information.push(sheets_name,tempArray)
+
+    }
+    else{
+      information = XLSX.utils.sheet_to_json(worksheet,{raw:true});
+    }
     displayDivs(input,pathName,information,selOpt,selVal);
   }
 
@@ -98,6 +120,9 @@ function displayDivs(type,pathName,information,selOpt,selVal){
     dispContBut(selOpt,indexArray,information);
     regenBut(information,selOpt);
     pageDisable(information);
+  }
+  else if (type === 'MAIN') {
+    loadIndex(information);
   }
 }
 
@@ -336,7 +361,7 @@ function buttonClicked(event){
     let selBut = event.target.id;
     checkPageBut(selBut);
   }
-  //console.log(event.target)
+  console.log(event.target)
 }
 
 // give hightlights when filter button clicked
