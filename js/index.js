@@ -2,7 +2,7 @@
 function loadIndex(information){
 
   document.addEventListener('click',(event) => {buttonClicked(event)});
-  
+
   let titles = information[0];
   let page_info = information[1];
   let available = [];
@@ -40,6 +40,8 @@ function index_Content(type,information){
   for (let i = 0;i<type.length;i++){
     output = '';
     let contentDivs = getElement('id',type[i]);
+    contentDivs.classList.add('mdl-shadow--3dp');
+    contentDivs.classList.remove('disappear');
     let selected_Array = information[i];
     output += '<div class="mdl-cell index_title"><h4>' + type[i] + '</h4></div>';
     output += '<div class="mdl-grid video-max-width">';
@@ -53,7 +55,7 @@ function index_Content(type,information){
         output += '<div class="mdl-card__supporting-text video-title">';
         output += '<h2 class="mdl-card__title-text">' + name + '</h2></div>';
         output += '<div class="mdl-card__actions mdl-card--border">';
-        output += '<a class="mdl-button mdl-button--colored mdl-js-button mdl-js-ripple-effect">Play</a>';
+        output += '<a class="mdl-button mdl-button--colored mdl-js-button mdl-js-ripple-effect play-button" id="' + name + '">Play</a>';
         output += '</div></div>';
       }
     }

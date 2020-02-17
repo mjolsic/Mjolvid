@@ -4,8 +4,11 @@ initialise();
 function initialise(){
   //
   stringProto();
+  s_bar();
   let pathName = htmlChecker();
   if (pathName.indexOf('index') !== -1){
+    let sKEY = 'SBAR';
+    removeInfo(sKEY);
     readExcel('MAIN',pathName)
   }
   else if (pathName.indexOf('information_page') !== -1){
@@ -21,10 +24,15 @@ function initialise(){
     let KEY1 = 'FILTER';
     let KEY2 = 'INDEX';
     let KEY3 = 'PAGE-BUTTON';
+    let sKEY = 'SBAR';
     removeInfo(KEY1);
     removeInfo(KEY2);
     removeInfo(KEY3);
+    removeInfo(sKEY);
     readExcel('INFORMATION',pathName);
+  }
+  else if (pathName.indexOf('result') !== -1){
+    readExcel('RESULT',pathName)
   }
 }
 
@@ -34,6 +42,11 @@ function stringProto(){
   }
   String.prototype.capitalize = function() {
     return this.charAt(0).toUpperCase() + this.slice(1);
+  }
+  String.prototype.removeCharAt = function (i) {
+    var tmp = this.split(''); // convert to an array
+    tmp.splice(i , 1); // remove 1 element from the array (adjusting for non-zero-indexed counts)
+    return tmp.join(''); // reconstruct the string
   }
 }
 
@@ -60,37 +73,39 @@ function readExcel(input,pathName,selOpt,selVal){
 
     // Get worksheet
     var worksheet,information,sheets_name;
-    if (input === 'MAIN'){
+    if (input === 'MAIN' || pathName[1].indexOf('index') !== -1 || input === 'RESULT'){
       worksheet = [];
       sheets_name = [];
       information = [];
     }
     workbook.SheetNames.forEach((item) => {
-      if (input !== 'INFO-PAGE'){
-        if (input !== 'MAIN'){
-          if (pathName.indexOf(item) !== -1){
-            worksheet = workbook.Sheets[item];
-          }
-        }
-        else{
+      if (input === 'INFO-PAGE'){
+        if (pathName[1].indexOf('index') !== -1){
           sheets_name.push(item);
           worksheet.push(workbook.Sheets[item]);
         }
+        else{
+          if (pathName[1].indexOf(item) !== -1){
+            worksheet = workbook.Sheets[item]
+          }
+        }
       }
-      else{
-        if (pathName[1].indexOf(item) !== -1){
-          worksheet = workbook.Sheets[item]
+      else if (input === 'MAIN' || input === 'RESULT'){
+        sheets_name.push(item);
+        worksheet.push(workbook.Sheets[item]);
+      }
+      else {
+        if (pathName.indexOf(item) !== -1){
+          worksheet = workbook.Sheets[item];
         }
       }
     });
-
     if (worksheet.length){
       let tempArray = [];
       for (let i=0;i<worksheet.length;i++){
         tempArray.push(XLSX.utils.sheet_to_json(worksheet[i],{raw:true}))
       }
       information.push(sheets_name,tempArray)
-
     }
     else{
       information = XLSX.utils.sheet_to_json(worksheet,{raw:true});
@@ -124,11 +139,14 @@ function displayDivs(type,pathName,information,selOpt,selVal){
   else if (type === 'MAIN') {
     loadIndex(information);
   }
+  else if (type === 'RESULT') {
+    search_result(information);
+  }
 }
 
 // Input is the storage key
 function getInfo(input){
-
+  
   // get storage item
   var storageItem = localStorage.getItem(input);
   // parse item back to normal
@@ -145,13 +163,7 @@ function removeInfo(input){
 }
 
 function setInfo(key,input){
-  let stringInfo = '';
-  if (typeof input !== 'string'){
-    stringInfo = JSON.stringify(input)
-  }
-  else{
-    stringInfo = input;
-  }
+  let stringInfo = JSON.stringify(input)
   localStorage.setItem(key,stringInfo);
 }
 
@@ -197,13 +209,21 @@ function getElement(type,name){
       output = document.querySelector('#' + name);
     }
   }
+  else if (type === 'tn'){
+    output = document.getElementsByTagName(name);
+  }
   return output;
 }
 
-function redirect(input){
-  let KEY = 'INDEX';
-  setInfo(KEY,input);
-  window.location.href = 'information_page.html';
+function redirect(type,input){
+  if (type === 'INFO-PAGE'){
+    let KEY = 'INDEX';
+    setInfo(KEY,input);
+    window.location.href = 'information_page.html';
+  }
+  else if (type === 'result'){
+    window.location.href = 'result.html';
+  }
 }
 
 function loadDiv(data,index){
@@ -330,6 +350,23 @@ function convertInput(input,type){
     }
     output = temp;
   }
+  else if (type === 'searching'){
+    let temp = input;
+    let index;
+    while (temp.indexOf('-') !== -1 || temp.indexOf(':') !== -1 || temp.indexOf(' ') !== -1){
+      if (temp.indexOf('-') !== -1){
+        index = temp.indexOf('-');
+      }
+      else if(temp.indexOf(':') !== -1){
+        index = temp.indexOf(':');
+      }
+      else if(temp.indexOf(' ') !== -1){
+        index = temp.indexOf(' ');
+      }
+      temp = temp.removeCharAt(index);
+    }
+    output = temp;
+  }
   else{
     output = input;
   }
@@ -354,14 +391,15 @@ function buttonClicked(event){
       selection = event.target.id;
     }
     let pathName = htmlChecker();
-    redirect([selection,pathName]);
+    console.log(selection)
+    redirect('INFO-PAGE',[selection,pathName]);
   }
   else if (event.target.matches('.pages-button')) {
     // selected button
     let selBut = event.target.id;
     checkPageBut(selBut);
   }
-  console.log(event.target)
+  //console.log(event.target)
 }
 
 // give hightlights when filter button clicked
@@ -601,4 +639,62 @@ function regenBut(information,input_Index){
     to_Hide = selected_Id - 2;
   }
   calButNum('contents',still_have,to_Hide);
+}
+
+function s_bar(){
+  let inputs = getElement('tn','input');
+  console.log(inputs)
+  for (let i=0;i<inputs.length;i++){
+    inputs[i].addEventListener('input',function(event){recording(event)});
+    inputs[i].addEventListener('keyup',function(event){navigate_result(event)})
+  }
+}
+
+function recording(event){
+  let input = event.target.value;
+  let KEY = 'SBAR';
+  setInfo(KEY,input);
+}
+
+function navigate_result(event){
+  if (event.key === 'Enter' && event.keyCode === 13){
+    redirect('result');
+  }
+}
+
+function search_result(information){
+  let KEY = 'SBAR';
+  let s_bar = getInfo(KEY);
+  let titles = information[0];
+  let page_info = information[1];
+  let available = [];
+  let output = '';
+
+  page_info.forEach((item, i) => {
+    if (item.length){
+      item.forEach((item_1, i) => {
+        let name = item_1.Name.toLowerCase();
+        let converted = convertInput(name,'searching');
+        console.log(converted)
+        if (converted.search(s_bar.toLowerCase()) !== -1){
+          available.push(item_1);
+        }
+      });
+    }
+  });
+
+  available.forEach((item, i) => {
+    output += generateContents('contents',item)
+  });
+  display_result(s_bar,available.length,output);
+}
+
+function display_result(s_result,r_total,gened_div){
+  let keyword = getElement('id','keyword');
+  let total = getElement('id','total');
+  let result = getElement('id','result');
+
+  keyword.innerText = 'Searched Keyword: ' + s_result;
+  total.innerText = 'Total result: ' + r_total;
+  result.innerHTML = gened_div
 }

@@ -41,7 +41,7 @@
                     <a class="mdl-navigation__link" href="#">Episodes</a>
                     <a class="mdl-navigation__link" href="movies.html">Movies</a>
                     <a class="mdl-navigation__link" href="anime.html">Anime</a>
-                    <div class="mdl-textfield mdl-js-textfield mdl-textfield--expandable mdl-textfield--floating-label mdl-textfield--align-right s-bar">
+                    <div class="mdl-textfield mdl-js-textfield mdl-textfield--expandable mdl-textfield--floating-label mdl-textfield--align-right s-bar-gone">
                       <label class="mdl-button mdl-js-button mdl-button--icon"
                              for="waterfall-exp">
                         <i class="material-icons">search</i>
@@ -63,22 +63,28 @@
               <a class="mdl-navigation__link" href="anime.html">Anime</a>
             </nav>
         </div>
-
         <main class="mdl-layout__content">
-          <div class="mdl-grid video-max-width">
-            <div class="mdl-cell mdl-shadow--2dp" id="filter">
+
+          <div class="mdl-grid video-max-width index s-bar-appear">
+            <div class="mdh-expandable-search">
+               <i class="material-icons">search</i>
+                 <input type="text" placeholder="Search" size="1">
+             </div>
+          </div>
+
+
+          <div class="mdl-grid video-max-width mdl-shadow--4dp">
+            <div class="mdl-cell index_title">
+              <h5 class="left" id="keyword"></h5>
+              <h5 class="right" id="total"></h5>
+            </div>
+
+            <div class="mdl-grid video-max-width index" id='result'>
 
             </div>
           </div>
 
-          <div class="mdl-grid video-max-width" id="contents"></div>
-
-          <div class="mdl-grid video-max-width ">
-            <div class="mdl-cell pages"id="pages"><!-- Raised button --></div>
-          </div>
         </main>
-
-
     </div>
     <script src="https://code.getmdl.io/1.0.6/material.min.js"></script>
     <script src="js/xlsx.full.min.js"></script>
